@@ -1,7 +1,5 @@
 package br.com.alex.info.controller;
 
-import java.util.Optional;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +15,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import br.com.alex.info.model.TipoVinho;
 import br.com.alex.info.model.Vinho;
-import br.com.alex.info.repository.VinhosRepository;
 import br.com.alex.info.repository.filter.VinhoFilter;
+import br.com.alex.info.services.impl.VinhoServiceImpl;
 
 @Controller
 @RequestMapping("/vinhos")
 public class VinhosController {
 	
 	@Autowired
-	private VinhosRepository vinhosRepo;
+	private VinhoServiceImpl vinhoServiceImpl;
 	
 	@GetMapping("/novo")
 	public ModelAndView novo(Vinho vinho) {
@@ -41,7 +39,7 @@ public class VinhosController {
 			return novo(vinho);
 		}
 		
-		vinhosRepo.save(vinho);
+		vinhoServiceImpl.salvar(vinho);
 		attributes.addFlashAttribute("mensagem", "Vinho salvo com sucesso!");
 		return new ModelAndView("redirect:/vinhos/novo");
 	}
@@ -49,22 +47,21 @@ public class VinhosController {
 	@GetMapping
 	public ModelAndView buscar(VinhoFilter vinhoFilter) {
 		ModelAndView mv = new ModelAndView("/vinho/pesquisa-vinhos");
-		mv.addObject("vinhos", vinhosRepo.findByNomeContainingIgnoreCase(Optional
-					.ofNullable(vinhoFilter.getNome()).orElse("%")));
-		return mv;
+		mv.addObject("vinhos", vinhoServiceImpl.buscarPorNome(vinhoFilter));
+		return mv;		
 		
 	}
 	
 	@GetMapping("/{codigo}")
 	public ModelAndView editar(@PathVariable Long codigo) {
-		Vinho vinho = vinhosRepo.getOne(codigo);
+		Vinho vinho = vinhoServiceImpl.buscarPorId(codigo);
 		return novo(vinho);
 		
 	}
 	
 	@DeleteMapping("/{codigo}")
 	public String excluir(@PathVariable Long codigo, RedirectAttributes attributes) {
-		vinhosRepo.delete(codigo);
+		vinhoServiceImpl.excluir(codigo);
 		attributes.addFlashAttribute("mensagem", "Vinho removido com sucesso!");
 		return "redirect:/vinhos";
 	}
